@@ -1,5 +1,9 @@
 Revision history for Perl extension Event::Lib.
 
+0.02  Fri Aug 27 08:22:38 CEST 2004
+	- the event callbacks were called without the event-type
+	  argument. Now they receive this additional arg.
+
 0.01  Sat Aug 14 07:30:14 2004
 	- original version; created by h2xs 1.23 with options
 		-O -b 5.6.0 -n Event::Lib /usr/local/include/event.h

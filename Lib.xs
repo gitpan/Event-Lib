@@ -55,6 +55,7 @@ void do_callback (int fd, short event, struct event_args *args) {
      * EVf_DONT_FREE) is used and checked for in each of the DESTROY methods */
     SvFLAGS(SvRV(ev)) |= EVf_DONT_FREE;
     PUSHs(ev);
+    PUSHs(sv_2mortal(newSViv(event)));
 
     for (i = 0; i < args->num; i++) {
 	PUSHs(args->args[i]);

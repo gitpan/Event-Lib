@@ -9,7 +9,7 @@ require Exporter;
 require XSLoader;
 
 our @ISA = qw(Exporter);
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 sub import {
     my ($class) = shift;
@@ -219,10 +219,12 @@ persistent, that is: Once the event is triggered, it is not removed from the
 event-loop. If you do not pass this flag, you have to re-schedule the event in
 the event-handler I<$function>.
 
-I<$function> is the callback that is executed when the given event happened. This
-function is always called with at least one argument, namely the event object itself
-which was created by the above C<event_new>. I<@args> is an optional list of additional
-arguments your callback will receive.
+I<$function> is the callback that is executed when the given event happened.
+This function is always called with at least two arguments, namely the event
+object itself which was created by the above C<event_new> and an integer being
+the event-type that occured (which could be EV_WRITE, EV_READ or EV_TIMEOUT).
+I<@args> is an optional list of additional arguments your callback will
+receive.
 
 The function returns an event object (the very object that is later passed to the 
 callback function).
@@ -314,10 +316,11 @@ Such events are created with C<timer_new>:
 
 =item * timer_new( $function, [@args] )
 
-This is very much the same as C<event_new>, only that it lacks its first two parameters.
-I<$function> is a reference to a Perl function that should be executed. As always, this function
-will receive the event object as returned by C<timer_new> as first argument plus the optional
-argumentlist I<@args>.
+This is very much the same as C<event_new>, only that it lacks its first two
+parameters.  I<$function> is a reference to a Perl function that should be
+executed. As always, this function will receive the event object as returned by
+C<timer_new> as first argument, the type of event (always EV_TIMEOUT) plus the
+optional argumentlist I<@args>.
 
 =item * event_add( $event, [$timeout] )
 
@@ -371,9 +374,9 @@ as exported by the POSIX module:
     $signal->add;
     event_dispatch();
 
-As always, I<$function> receives the event object as first argument and
-I<@args> specifies an option list of values that is to be passed to the
-handler.
+As always, I<$function> receives the event object as first argument, the
+event-type (always EV_SIGNAL) as second. I<@args> specifies an option list of
+values that is to be passed to the handler.
 
 =item * event_add( $event, [$timeout] )
 
@@ -684,7 +687,7 @@ event_loop(...)> and C<int event_loopexit(...)> to do its work.
 
 =head1 VERSION
 
-This is version 0.01.
+This is version 0.02.
 
 =head1 AUTHOR
 
