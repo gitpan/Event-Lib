@@ -152,7 +152,17 @@ CODE:
 OUTPUT:
     RETVAL
 
-    
+int
+priority_init (nump)
+    int nump;
+PROTOTYPE: $
+CODE:
+{
+    RETVAL = event_priority_init(nump);
+}
+OUTPUT:
+    RETVAL
+
 struct event_args *
 signal_new (signal, func, ...)
     int signal;
@@ -313,6 +323,17 @@ CODE:
     XSRETURN_NO;
 }
 
+int
+set_priority (args, prio)
+    struct event_args *args;
+    int prio;
+CODE:
+{
+    RETVAL = event_priority_set(args->ev, prio);
+}
+OUTPUT:
+    RETVAL
+
 void
 free (args)
     struct event_args *args;
@@ -341,7 +362,6 @@ CODE:
 
     event_loop(flags);
 }
-
 
 MODULE = Event::Lib             PACKAGE = Event::Lib::event
 

@@ -9,7 +9,7 @@ require Exporter;
 require XSLoader;
 
 our @ISA = qw(Exporter);
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 sub import {
     my ($class) = shift;
@@ -54,6 +54,7 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
 	event_add
 	event_del
 	event_once
+	priority_init
 	signal_new
 	signal_add
 	signal_del
@@ -96,12 +97,12 @@ our @EXPORT = qw(
     signal_new
     signal_add
     signal_del
-    
+   
+    priority_init
+
     timer_new
     timer_add
     timer_del
-
-    bufferevent_new
 
     EVBUFFER_EOF
     EVBUFFER_ERROR
@@ -464,6 +465,33 @@ These do the same as their counterparts for filehandle- and timer-events (see ab
 
 =back 
 
+=head2 Priorities
+
+Events can be assigned a priority. The lower its assigned priority is, the earlier this
+event is processed. Using prioritized events in your programs requires two
+steps. The first one is to set the number of available priorities. Setting
+those should happen once in your script and before any events are dispatched:
+
+=over 4
+
+=item * priority_init( $priorities )
+
+Sets the number of different events to I<$priorities>.
+
+=back
+
+Assigning a priority to each event then happens thusly:
+
+=over 4
+
+=item * $event->set_priority( $priority )
+
+Gives I<$event> (which can be any of the three type of events) the priority
+I<$priority>. Remember that a lower priority means the event is processed
+earlier!
+
+=back
+
 =head2 Common methods
 
 There's one methode that behaves identically for each type of event:
@@ -673,6 +701,7 @@ processes manually.
 This modules exports by default the following functions:
     
     event_init
+    priority_init
     event_new
     timer_new
     signal_new
@@ -719,6 +748,11 @@ C<import> method. So if you need to include it at runtine, this will work:
     require Event::Lib;
     Event::Lib->import;
 
+As of (at least) libevent-1.0c, this module is more noisy on stderr than it
+ought to be. You may get messages such as C<[warn] epoll_create: Function not
+implemented> on loading the module. The library appears to offer no interface
+to turn those messages off. 
+
 =head1 TO-DO
 
 Not all of libevent's public interface is implemented. The buffered events are still
@@ -726,6 +760,9 @@ missing. They will be added once I grok what they are for.
 
 Same is true for the two mysterious static variables C<event_sigcb> and
 C<event_gotsig>.
+
+Neither did I yet look into libevent's experimental thread-support. Once the
+"experimental" flag is removed, I might do that.
 
 =head1 SEE ALSO
 
@@ -739,7 +776,7 @@ event_loop(...)> and C<int event_loopexit(...)> to do its work.
 
 =head1 VERSION
 
-This is version 0.04.
+This is version 0.05.
 
 =head1 AUTHOR
 
@@ -747,7 +784,7 @@ Tassilo von Parseval, E<lt>tassilo.von.parseval@rwth-aachen.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004 by Tassilo von Parseval
+Copyright (C) 2004-2005 by Tassilo von Parseval
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.4 or,

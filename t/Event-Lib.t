@@ -7,7 +7,7 @@
 
 use Test;
 BEGIN { plan tests => 2 };
-use Event::Lib;
+use Event::Lib; 
 ok(1); # If we made it this far, we're ok.
 
 

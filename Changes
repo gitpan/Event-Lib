@@ -1,23 +1,29 @@
 Revision history for Perl extension Event::Lib.
 
+0.05  Mon Apr  4 09:51:42 CEST 2005
+    - Event::Lib now in par with libevent-1.0c 
+      (might still compile on 1.0, though)
+    - support for event priorities added
+    - POD- and POD-coverage-tests
+
 0.04  Tue Aug 31 17:48:55 CEST 2004
-	- a hairy bug when spawning children:
-	  no events could be scheduled in child processes
-	  when kqueue(2) was used. This is now fixed by providing
-	  the event_init() function to be called in child procs.
-	- Makefile.PL fixes for Darwin/FreeBSD
-	(both spotted and patched by Rocco Caputo <rcaputo AT pobox DOT com>)
+    - a hairy bug when spawning children:
+      no events could be scheduled in child processes
+      when kqueue(2) was used. This is now fixed by providing
+      the event_init() function to be called in child procs.
+    - Makefile.PL fixes for Darwin/FreeBSD
+      (both spotted and patched by Rocco Caputo <rcaputo AT pobox DOT com>)
 	
 0.03  Fri Aug 27 16:13:11 CEST 2004
-	- Makefile.PL should honor @ARGV
-	- some Win32 fixes for Lib.xs
-	(both patches via rt.cpan.org; there was no name attached to them)
+    - Makefile.PL should honor @ARGV
+    - some Win32 fixes for Lib.xs
+      (both patches via rt.cpan.org; there was no name attached to them)
 
 0.02  Fri Aug 27 08:22:38 CEST 2004
-	- the event callbacks were called without the event-type
-	  argument. Now they receive this additional arg.
+    - the event callbacks were called without the event-type
+      argument. Now they receive this additional arg.
 
 0.01  Sat Aug 14 07:30:14 2004
-	- original version; created by h2xs 1.23 with options
-		-O -b 5.6.0 -n Event::Lib /usr/local/include/event.h
+    - original version; created by h2xs 1.23 with options
+	    -O -b 5.6.0 -n Event::Lib /usr/local/include/event.h
 

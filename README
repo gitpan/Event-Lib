@@ -1,4 +1,4 @@
-Event-Lib version 0.04
+Event-Lib version 0.05
 ======================
 
 This module is a Perl wrapper around libevent(3) as available from
@@ -19,12 +19,14 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-    + libevent(3) from <http://www.monkey.org/~provos/libevent/>
+    + libevent(3) from <http://www.monkey.org/~provos/libevent/>,
+      probably at least version 1.0c thereof; 
+      1.0 might work too, though
     + a C compiler
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2004 by Tassilo von Parseval
+Copyright (C) 2004-2005 by Tassilo von Parseval
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.4 or,

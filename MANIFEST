@@ -5,6 +5,8 @@ MANIFEST
 check.c
 ppport.h
 README
+t/0_pod.t
+t/0_pod_coverage.t
 t/Event-Lib.t
 t/event.t
 t/signal.t
