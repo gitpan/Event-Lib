@@ -1,0 +1,18 @@
+Changes
+Lib.xs
+Makefile.PL
+MANIFEST
+check.c
+ppport.h
+README
+t/Event-Lib.t
+t/event.t
+t/signal.t
+t/timer.t
+fallback/const-c.inc
+fallback/const-xs.inc
+lib/Event/Lib.pm
+scripts/server.pl
+scripts/client.pl
+typemap
+META.yml                                 Module meta-data (added by MakeMaker)
