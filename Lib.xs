@@ -105,6 +105,14 @@ BOOT:
     event_init();
 }
 
+void
+event_init()
+PROTOTYPE:
+CODE:
+{
+    event_init();
+}
+
 struct event_args *
 event_new (io, event, func, ...)
     SV	    *io;

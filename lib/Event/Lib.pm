@@ -9,7 +9,7 @@ require Exporter;
 require XSLoader;
 
 our @ISA = qw(Exporter);
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 sub import {
     my ($class) = shift;
@@ -48,6 +48,19 @@ sub import {
 # If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
 # will save memory.
 our %EXPORT_TAGS = ( 'all' => [ qw(
+	event_init
+	event_dispatch
+	event_new
+	event_add
+	event_del
+	event_once
+	signal_new
+	signal_add
+	signal_del
+	timer_new
+	timer_add
+	timer_del
+	bufferevent_new
 	EVBUFFER_EOF
 	EVBUFFER_ERROR
 	EVBUFFER_READ
@@ -72,6 +85,7 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw(
+    event_init
     event_dispatch
     
     event_new
@@ -194,6 +208,32 @@ how it all fits together.
 
 There's also a section briefly mentioning other event modules on the CPAN
 and how they differ from I<Event::Lib> further below (L<"OTHER EVENT MODULES">).
+
+=head1 INITIALIZATION
+
+Most of the time you don't have to do anything other than
+
+    use Event::Lib;
+
+However, when you spawn off new processes with C<fork> and you intend to
+register and schedule events inside those child processes, you must call
+C<event_init> in the spawned processes before you do anything event-related:
+
+    use Event::Lib;
+
+    my $pid = fork;
+
+    if ($pid) {
+	# parent
+	wait;
+    } else {
+	# I am the child and you have to re-initialize
+	event_init();
+	...
+    }
+
+The reason for that is that the kqueue(2) mechanism doesn't inherit its queue
+handles to its children.
 
 =head1 EVENTS
 
@@ -370,7 +410,7 @@ as exported by the POSIX module:
     use Event::Lib;
     use POSIX;
 
-    my $signal = signal_new(SIGINT, sub { print "Someone hitted ctrl-c" });
+    my $signal = signal_new(SIGINT, sub { print "Someone hit ctrl-c" });
     $signal->add;
     event_dispatch();
 
@@ -394,7 +434,7 @@ only once:
 
     sub sigint {
 	my $event = shift;
-	print "Someone hitted ctrl-c";
+	print "Someone hit ctrl-c";
 	$event->free;	# or maybe: $event->del
     }
     
@@ -406,7 +446,7 @@ Subsequently, a persistent and timeouted signal-handler would read thusly:
 
     sub sigint {
 	my $event = shift;
-	print "Someone hitted ctrl-c";
+	print "Someone hit ctrl-c";
 	$event->add(2.5);
     }
 
@@ -631,7 +671,8 @@ processes manually.
 =head1 EXPORT
 
 This modules exports by default the following functions:
-
+    
+    event_init
     event_new
     timer_new
     signal_new
@@ -667,6 +708,17 @@ Maybe.
 
 This library is almost certainly not thread-safe.
 
+You must include the module either via C<use> or C<require> after which you
+call C<import>. Merely doing 
+
+    require Event::Lib;
+
+doesn't work because this module has to load its dynamic portion in the
+C<import> method. So if you need to include it at runtine, this will work:
+
+    require Event::Lib;
+    Event::Lib->import;
+
 =head1 TO-DO
 
 Not all of libevent's public interface is implemented. The buffered events are still
@@ -687,7 +739,7 @@ event_loop(...)> and C<int event_loopexit(...)> to do its work.
 
 =head1 VERSION
 
-This is version 0.03.
+This is version 0.04.
 
 =head1 AUTHOR
 

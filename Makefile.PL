@@ -7,7 +7,15 @@ my %args = map { split /\s*=\s*/ } @ARGV;
 sub have_libevent {
     my $CC = $Config{cc}.' '.$Config{ccflags}.' ';
     my $LIBS = $args{ LIBS } || "-levent";
-    my $INC = $args{ INC };
+    my $INC = $args{ INC } || "-I/usr/include";
+    if ($^O eq "freebsd") {
+      $LIBS = "-L/usr/local/lib $LIBS";
+      $INC  = "-I/usr/local/include $INC";
+    }
+    elsif ($^O eq "darwin") {
+      $LIBS = "-L/sw/lib $LIBS";
+      $INC  = "-I/sw/include $INC";
+    }
     return 1 if system("$CC check.c $INC $LIBS") == 0;
     return 0;
 }

@@ -13,6 +13,7 @@ if ($pid) {
     print KID "ok";
     close KID;
 } else {
+    event_init;
     my $event = event_new(\*STDIN, EV_READ, 
 	sub {  
 	    my $ev = shift;

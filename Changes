@@ -1,5 +1,13 @@
 Revision history for Perl extension Event::Lib.
 
+0.04  Tue Aug 31 17:48:55 CEST 2004
+	- a hairy bug when spawning children:
+	  no events could be scheduled in child processes
+	  when kqueue(2) was used. This is now fixed by providing
+	  the event_init() function to be called in child procs.
+	- Makefile.PL fixes for Darwin/FreeBSD
+	(both spotted and patched by Rocco Caputo <rcaputo AT pobox DOT com>)
+	
 0.03  Fri Aug 27 16:13:11 CEST 2004
 	- Makefile.PL should honor @ARGV
 	- some Win32 fixes for Lib.xs
