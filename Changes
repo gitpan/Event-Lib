@@ -1,5 +1,10 @@
 Revision history for Perl extension Event::Lib.
 
+0.03  Fri Aug 27 16:13:11 CEST 2004
+	- Makefile.PL should honor @ARGV
+	- some Win32 fixes for Lib.xs
+	(both patches via rt.cpan.org; there was no name attached to them)
+
 0.02  Fri Aug 27 08:22:38 CEST 2004
 	- the event callbacks were called without the event-type
 	  argument. Now they receive this additional arg.

@@ -1,11 +1,17 @@
+#ifdef WIN32
+#undef read
+#undef write
+#else
+#include <sys/time.h>
+#endif
+
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
 
-#include "ppport.h"
-
-#include <sys/time.h>
 #include <event.h>
+
+#include "ppport.h"
 
 #include "const-c.inc"
 
@@ -73,12 +79,18 @@ void do_callback (int fd, short event, struct event_args *args) {
 
 }
 
-void make_timeval (struct timeval *tv, double t) {
+#ifdef WIN32
+#define THEINLINE __forceinline
+#else
+#define THEINLINE inline
+#endif
+
+THEINLINE void make_timeval (struct timeval *tv, double t) {
     tv->tv_sec = (long)t;
     tv->tv_usec = (t - (long)t) * 1e6f;
 }
-    
-inline double delta_timeval (struct timeval *t1, struct timeval *t2) {
+
+THEINLINE double delta_timeval (struct timeval *t1, struct timeval *t2) {
     double t1t = t1->tv_sec + (double)t1->tv_usec / 1e6f;
     double t2t = t2->tv_sec + (double)t2->tv_usec / 1e6f; 
     return t2t - t1t;

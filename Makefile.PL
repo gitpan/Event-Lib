@@ -2,12 +2,13 @@ use 5.006;
 use ExtUtils::MakeMaker;
 use Config;
 
+my %args = map { split /\s*=\s*/ } @ARGV;
+
 sub have_libevent {
-    my $CC = $Config{cc};
-    my %args = map { split /\s*=\s*/ } @ARGV;
+    my $CC = $Config{cc}.' '.$Config{ccflags}.' ';
     my $LIBS = $args{ LIBS } || "-levent";
     my $INC = $args{ INC };
-    return 1 if system("$CC check.c $INC $LIBS 2>/dev/null") == 0;
+    return 1 if system("$CC check.c $INC $LIBS") == 0;
     return 0;
 }
 
@@ -23,15 +24,17 @@ To obtain it, go to
 EOD
 }
 
+$args{LIBS} = '-levent -lm' if ! exists $args{LIBS};
+
 WriteMakefile(
     NAME            => 'Event::Lib',
     VERSION_FROM    => 'lib/Event/Lib.pm', 
     PREREQ_PM       => {}, 
     ABSTRACT_FROM   => 'lib/Event/Lib.pm', 
     AUTHOR	    => 'Tassilo von Parseval <tassilo.von.parseval@rwth-aachen.de>',
-    LIBS            => ['-levent -lm'], 
-    DEFINE          => '', 
-    INC             => '-I.', 
+    LIBS            => [ $args{LIBS} ], 
+    DEFINE          => '-DHAVE_CONFIG_H', 
+    INC             => $args{INC} ,
     clean	    => { FILES => "a.out" },
 );
 
