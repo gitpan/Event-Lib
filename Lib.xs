@@ -95,13 +95,24 @@ THEINLINE double delta_timeval (struct timeval *t1, struct timeval *t2) {
     double t2t = t2->tv_sec + (double)t2->tv_usec / 1e6f; 
     return t2t - t1t;
 }
-	
+
+static const char* str[] = { "debug", "msg", "warn", "err", "???" };
+
+void log_cb (int sev, const char *msg) {
+    if (sev >= _EVENT_LOG_ERR) {
+	if (sev > _EVENT_LOG_ERR) 
+	    sev = _EVENT_LOG_ERR + 1;
+	PerlIO_printf(PerlIO_stderr(), "[%s] %s\n", str[sev], msg);
+    }
+}
+
 MODULE = Event::Lib		PACKAGE = Event::Lib		
 
 INCLUDE: const-xs.inc
 
 BOOT:
 {
+    event_set_log_callback(log_cb);
     event_init();
 }
 
@@ -118,7 +129,7 @@ event_new (io, event, func, ...)
     SV	    *io;
     short   event;
     SV	    *func;
-PROTOTYPE: $$&@;
+PROTOTYPE: $$&;@
 PREINIT:
     static char *CLASS = "Event::Lib::event";
 CODE:
@@ -167,7 +178,7 @@ struct event_args *
 signal_new (signal, func, ...)
     int signal;
     SV	*func;
-PROTOTYPE: $&@;
+PROTOTYPE: $&;@
 PREINIT:
     static char *CLASS = "Event::Lib::signal";
 CODE:
@@ -199,7 +210,7 @@ OUTPUT:
 struct event_args *
 timer_new (func, ...)
     SV *func;
-PROTOTYPE: &@;
+PROTOTYPE: &;@
 PREINIT:
     static char *CLASS = "Event::Lib::timer";
 CODE:
@@ -277,7 +288,7 @@ CODE:
 void
 event_dispatch (flags = 0, ...)
     int flags;
-PROTOTYPE: $;$;
+PROTOTYPE: ;$$
 CODE:
 {
     if (items > 1) {

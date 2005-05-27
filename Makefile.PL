@@ -55,7 +55,8 @@ if  (eval {require ExtUtils::Constant; 1}) {
 		 EVBUFFER_WRITE EVLIST_ACTIVE EVLIST_ALL EVLIST_INIT
 		 EVLIST_INSERTED EVLIST_INTERNAL EVLIST_SIGNAL EVLIST_TIMEOUT
 		 EVLOOP_NONBLOCK EVLOOP_ONCE EV_PERSIST EV_READ EV_SIGNAL
-		 EV_TIMEOUT EV_WRITE));
+		 EV_TIMEOUT EV_WRITE
+		 _EVENT_LOG_DEBUG _EVENT_LOG_MSG _EVENT_LOG_WARN _EVENT_LOG_ERR));
   ExtUtils::Constant::WriteConstants(
                                      NAME         => 'Event::Lib',
                                      NAMES        => \@names,

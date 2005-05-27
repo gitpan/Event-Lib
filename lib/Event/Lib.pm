@@ -9,7 +9,7 @@ require Exporter;
 require XSLoader;
 
 our @ISA = qw(Exporter);
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 sub import {
     my ($class) = shift;
@@ -26,16 +26,26 @@ sub import {
 	push @_, $_;
     }
 
-    # otherwise Exporter exports into this and not the caller's package
-    local $Exporter::ExportLevel = 1;
-
-    $class->SUPER::import(@_);
-
     # We have to load the dynamic portion here
     # because otherwise event_init(), which happens
     # in a BOOT-section, runs before we have set 
     # %ENV accordingly
     XSLoader::load('Event::Lib', $VERSION);
+
+    # rename _EVENT_LOG_* to EVENT_LOG_*
+    # note that these constants aren't yet useful as there
+    # is no infrastructure yet to call event_set_log_callback 
+    # from Perl
+    for (qw/DEBUG MSG WARN ERR/) {
+	no strict 'refs';
+	my (undef, $val) = constant("_EVENT_LOG_$_");
+	*{"EVENT_LOG_$_"} = eval "sub () { $val }";
+    }
+    
+    # otherwise Exporter exports into this and not the caller's package
+    local $Exporter::ExportLevel = 1;
+    
+    $class->SUPER::import(@_);
 }
 
 @Event::Lib::event::ISA = @Event::Lib::signal::ISA = @Event::Lib::timer::ISA = qw/Event::Lib::base/;
@@ -81,6 +91,10 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
 	EV_SIGNAL
 	EV_TIMEOUT
 	EV_WRITE
+	EVENT_LOG_DEBUG
+	EVENT_LOG_MSG
+	EVENT_LOG_WARN
+	EVENT_LOG_ERR
 ) ] );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
@@ -123,6 +137,11 @@ our @EXPORT = qw(
     EV_SIGNAL
     EV_TIMEOUT
     EV_WRITE
+
+    EVENT_LOG_DEBUG
+    EVENT_LOG_MSG
+    EVENT_LOG_WARN
+    EVENT_LOG_ERR
 );
 
 
@@ -138,13 +157,7 @@ sub AUTOLOAD {
     if ($error) { croak $error; }
     {
 	no strict 'refs';
-	# Fixed between 5.005_53 and 5.005_61
-#XXX	if ($] >= 5.00561) {
-#XXX	    *$AUTOLOAD = sub () { $val };
-#XXX	}
-#XXX	else {
-	    *$AUTOLOAD = sub { $val };
-#XXX	}
+	*$AUTOLOAD = sub { $val };
     }
     goto &$AUTOLOAD;
 }
@@ -159,7 +172,7 @@ Event::Lib - Perl extentions for event-based programming
 =head1 SYNOPSIS
 
     use Event::Lib;
-    use POSIX;
+    use POSIX qw/SIGINT/;
     
     my $seconds;
     sub timer {
@@ -748,11 +761,6 @@ C<import> method. So if you need to include it at runtine, this will work:
     require Event::Lib;
     Event::Lib->import;
 
-As of (at least) libevent-1.0c, this module is more noisy on stderr than it
-ought to be. You may get messages such as C<[warn] epoll_create: Function not
-implemented> on loading the module. The library appears to offer no interface
-to turn those messages off. 
-
 =head1 TO-DO
 
 Not all of libevent's public interface is implemented. The buffered events are still
@@ -776,7 +784,7 @@ event_loop(...)> and C<int event_loopexit(...)> to do its work.
 
 =head1 VERSION
 
-This is version 0.05.
+This is version 0.06.
 
 =head1 AUTHOR
 
