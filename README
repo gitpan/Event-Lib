@@ -1,4 +1,4 @@
-Event-Lib version 0.06
+Event-Lib version 0.07
 ======================
 
 This module is a Perl wrapper around libevent(3) as available from
@@ -15,12 +15,21 @@ To install this module type the following:
    make test
    make install
 
+In case you have several libevents installed and you'd like to use
+the one in /usr/local/(lib|include):
+
+   perl Makefile.PL INC=-I/usr/local/include LIBS="-L/usr/local/lib -levent"
+   make
+   make test
+   make install
+    
 DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-    + libevent(3) from <http://www.monkey.org/~provos/libevent/>,
-      probably version 1.1 thereof; 1.0 should work too, though
+    + libevent(3) from <http://www.monkey.org/~provos/libevent/>;
+      I lost track of which version is needed, 
+      everything >= 0.9 might work
     + a C compiler
 
 COPYRIGHT AND LICENCE

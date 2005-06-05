@@ -1,5 +1,11 @@
 Revision history for Perl extension Event::Lib.
 
+0.07  Sun Jun  5 11:05:57 CEST 2005
+    - tweaked Makefile.PL so that the capabilities of the installed
+      libevent are checked first: features that would require
+      a more recent version can thus be disabled at compile-time
+    - crudely included a test for priority_init()
+
 0.06  Fri May 27 09:33:22 CEST 2005
     - some of the prototypes were apparently wrong:
       the code given in the SYNOPSIS of the PODs can now be run again

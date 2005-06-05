@@ -96,6 +96,7 @@ THEINLINE double delta_timeval (struct timeval *t1, struct timeval *t2) {
     return t2t - t1t;
 }
 
+#ifdef HAVE_LOG_CALLBACKS
 static const char* str[] = { "debug", "msg", "warn", "err", "???" };
 
 void log_cb (int sev, const char *msg) {
@@ -105,6 +106,7 @@ void log_cb (int sev, const char *msg) {
 	PerlIO_printf(PerlIO_stderr(), "[%s] %s\n", str[sev], msg);
     }
 }
+#endif
 
 MODULE = Event::Lib		PACKAGE = Event::Lib		
 
@@ -112,7 +114,9 @@ INCLUDE: const-xs.inc
 
 BOOT:
 {
+#ifdef HAVE_LOG_CALLBACKS
     event_set_log_callback(log_cb);
+#endif
     event_init();
 }
 
@@ -169,7 +173,11 @@ priority_init (nump)
 PROTOTYPE: $
 CODE:
 {
+#ifdef HAVE_PRIORITIES
     RETVAL = event_priority_init(nump);
+#else
+    RETVAL = 1;
+#endif
 }
 OUTPUT:
     RETVAL
@@ -340,7 +348,11 @@ set_priority (args, prio)
     int prio;
 CODE:
 {
+#ifdef HAVE_PRIORITIES
     RETVAL = event_priority_set(args->ev, prio);
+#else
+    RETVAL = 1;
+#endif
 }
 OUTPUT:
     RETVAL

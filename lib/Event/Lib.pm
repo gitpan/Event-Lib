@@ -9,7 +9,7 @@ require Exporter;
 require XSLoader;
 
 our @ISA = qw(Exporter);
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 sub import {
     my ($class) = shift;
@@ -32,16 +32,6 @@ sub import {
     # %ENV accordingly
     XSLoader::load('Event::Lib', $VERSION);
 
-    # rename _EVENT_LOG_* to EVENT_LOG_*
-    # note that these constants aren't yet useful as there
-    # is no infrastructure yet to call event_set_log_callback 
-    # from Perl
-    for (qw/DEBUG MSG WARN ERR/) {
-	no strict 'refs';
-	my (undef, $val) = constant("_EVENT_LOG_$_");
-	*{"EVENT_LOG_$_"} = eval "sub () { $val }";
-    }
-    
     # otherwise Exporter exports into this and not the caller's package
     local $Exporter::ExportLevel = 1;
     
@@ -91,10 +81,6 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
 	EV_SIGNAL
 	EV_TIMEOUT
 	EV_WRITE
-	EVENT_LOG_DEBUG
-	EVENT_LOG_MSG
-	EVENT_LOG_WARN
-	EVENT_LOG_ERR
 ) ] );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
@@ -138,10 +124,6 @@ our @EXPORT = qw(
     EV_TIMEOUT
     EV_WRITE
 
-    EVENT_LOG_DEBUG
-    EVENT_LOG_MSG
-    EVENT_LOG_WARN
-    EVENT_LOG_ERR
 );
 
 
@@ -505,6 +487,10 @@ earlier!
 
 =back
 
+B<Note:> If your installed version of libevent does not yet contain priorities
+which happens for pre-1.0 versions, the above will become no-ops. Other than that,
+your scripts will remain functional.
+
 =head2 Common methods
 
 There's one methode that behaves identically for each type of event:
@@ -784,7 +770,7 @@ event_loop(...)> and C<int event_loopexit(...)> to do its work.
 
 =head1 VERSION
 
-This is version 0.06.
+This is version 0.07.
 
 =head1 AUTHOR
 

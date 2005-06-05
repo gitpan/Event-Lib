@@ -14,6 +14,7 @@ if ($pid) {
     close KID;
 } else {
     event_init;
+    priority_init(10);	# should never give an error, regardless of libevent version
     my $event = event_new(\*STDIN, EV_READ, 
 	sub {  
 	    my $ev = shift;
