@@ -9,7 +9,7 @@ require Exporter;
 require XSLoader;
 
 our @ISA = qw(Exporter);
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 sub import {
     my ($class) = shift;
@@ -770,7 +770,7 @@ event_loop(...)> and C<int event_loopexit(...)> to do its work.
 
 =head1 VERSION
 
-This is version 0.07.
+This is version 0.08.
 
 =head1 AUTHOR
 

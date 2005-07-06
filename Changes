@@ -1,5 +1,11 @@
 Revision history for Perl extension Event::Lib.
 
+0.08  Wed Jul  6 10:10:18 CEST 2005
+    - additional arguments passed to the event-callbacks
+      weren't freed due to a spurious reference count 
+      incrementation 
+      (spotted by Thomas Yandell <tom AT vipercode DOT com>)
+
 0.07  Sun Jun  5 11:05:57 CEST 2005
     - tweaked Makefile.PL so that the capabilities of the installed
       libevent are checked first: features that would require
@@ -9,7 +15,7 @@ Revision history for Perl extension Event::Lib.
 0.06  Fri May 27 09:33:22 CEST 2005
     - some of the prototypes were apparently wrong:
       the code given in the SYNOPSIS of the PODs can now be run again
-      (spotted by Simon Dassow <janus AT area319 DOT de>
+      (spotted by Simon Dassow <janus AT area319 DOT de>)
     - the debug noise on stderr introduced with libevent-1.0c 
       has been quietened. Only messages with _EVENT_LOG_ERR are
       now displayed.

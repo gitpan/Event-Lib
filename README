@@ -1,4 +1,4 @@
-Event-Lib version 0.07
+Event-Lib version 0.08
 ======================
 
 This module is a Perl wrapper around libevent(3) as available from

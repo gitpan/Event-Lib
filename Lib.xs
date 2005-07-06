@@ -63,10 +63,8 @@ void do_callback (int fd, short event, struct event_args *args) {
     PUSHs(ev);
     PUSHs(sv_2mortal(newSViv(event)));
 
-    for (i = 0; i < args->num; i++) {
+    for (i = 0; i < args->num; i++)
 	PUSHs(args->args[i]);
-	SvREFCNT_inc(args->args[i]);
-    }
 
     PUTBACK;
     call_sv((SV*)args->func, G_VOID|G_EVAL);
