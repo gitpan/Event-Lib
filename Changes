@@ -1,5 +1,12 @@
 Revision history for Perl extension Event::Lib.
 
+0.09  Tue Sep 27 08:01:52 CEST 2005
+    - fixed another memory leak showing up in the fh() method
+      (spotted by Thomas Yandell <tom AT vipercode DOT com>)
+    - make sure that Test::Pod and Test::Pod::Coverage are
+      installed in the required minimum versions
+      (thanks to Ricardo Signes <rjbs AT cpan DOT org>)
+
 0.08  Wed Jul  6 10:10:18 CEST 2005
     - additional arguments passed to the event-callbacks
       weren't freed due to a spurious reference count 

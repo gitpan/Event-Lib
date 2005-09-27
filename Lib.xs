@@ -392,7 +392,6 @@ fh (args)
 CODE:
 {
     ST(0) = args->io;
-    SvREFCNT_inc(ST(0));
     XSRETURN(1);
 }
 
