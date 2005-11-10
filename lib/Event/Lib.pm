@@ -3,13 +3,12 @@ package Event::Lib;
 use 5.006;
 use strict;
 use warnings;
-use Carp;
 
 require Exporter;
 require XSLoader;
 
 our @ISA = qw(Exporter);
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 sub import {
     my ($class) = shift;
@@ -40,19 +39,13 @@ sub import {
 
 @Event::Lib::event::ISA = @Event::Lib::signal::ISA = @Event::Lib::timer::ISA = qw/Event::Lib::base/;
 
-# Items to export into callers namespace by default. Note: do not export
-# names by default without a very good reason. Use EXPORT_OK instead.
-# Do not simply export all your public functions/methods/constants.
-
-# This allows declaration	use Event::Lib ':all';
-# If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
-# will save memory.
 our %EXPORT_TAGS = ( 'all' => [ qw(
 	event_init
 	event_dispatch
 	event_new
 	event_add
 	event_del
+	event_free
 	event_once
 	priority_init
 	signal_new
@@ -92,6 +85,7 @@ our @EXPORT = qw(
     event_new
     event_add
     event_del
+    event_free
     event_once
     
     signal_new
@@ -134,9 +128,17 @@ sub AUTOLOAD {
     my $constname;
     our $AUTOLOAD;
     ($constname = $AUTOLOAD) =~ s/.*:://;
-    croak "&Event::Lib::constant not defined" if $constname eq 'constant';
+    if ($constname eq 'constant') {
+	require Carp;
+	Carp::croak "&Event::Lib::constant not defined";
+    }
+
     my ($error, $val) = constant($constname);
-    if ($error) { croak $error; }
+    if ($error) { 
+	require Carp;
+	Carp::croak $error; 
+    }
+
     {
 	no strict 'refs';
 	*$AUTOLOAD = sub { $val };
@@ -194,7 +196,7 @@ received.
 
 Under the hood, one of the available mechanisms for asynchronously dealing with
 events is used. This could be C<select>, C<poll>, C<epoll>, C<devpoll> or
-C<kqeue>. The idea is that you don't have to worry about those details and the
+C<kqueue>. The idea is that you don't have to worry about those details and the
 various interfaces they offer. I<Event::Lib> offers a unified interface  to all
 of them (but see L<"CONFIGURATION"> further below).
 
@@ -404,7 +406,7 @@ is C<SIGTERM> (on most platforms, anyway). You are advised to use the symbolic n
 as exported by the POSIX module:
 
     use Event::Lib;
-    use POSIX;
+    use POSIX qw/SIGINT/;
 
     my $signal = signal_new(SIGINT, sub { print "Someone hit ctrl-c" });
     $signal->add;
@@ -559,7 +561,7 @@ and it will emit something like C<libevent using: poll> or so.
 Here's a reasonably complete example how to use this library to create a simple
 TCP server serving many clients at once. It makes use of all three kinds of events:
 
-    use POSIX;
+    use POSIX qw/SIGHUP/;
     use IO::Socket::INET;
     use Event::Lib;
 
@@ -706,6 +708,7 @@ This modules exports by default the following functions:
     signal_new
     event_add
     event_del
+    event_free
     event_dispatch
 
 plus the following constants:
@@ -770,7 +773,7 @@ event_loop(...)> and C<int event_loopexit(...)> to do its work.
 
 =head1 VERSION
 
-This is version 0.09.
+This is version 0.10.
 
 =head1 AUTHOR
 

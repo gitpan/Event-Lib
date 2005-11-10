@@ -17,7 +17,7 @@ if ($pid) {
     wait;
 } else {
     event_init;
-    my $event = signal_new(SIGHUP, sub { ok(1); exit });
+    my $event = signal_new(SIGHUP, sub { event_free(shift); ok(1); exit });
     $event->add;
     # we give it ten seconds to receive the signal
     $event->dispatch(EVLOOP_ONCE, 10);

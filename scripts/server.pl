@@ -1,7 +1,7 @@
 #! /usr/bin/perl -w
 
 use strict;
-use POSIX;
+use POSIX qw/SIGHUP/;
 use IO::Socket::INET;
 use Event::Lib;
 

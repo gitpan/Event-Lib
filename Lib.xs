@@ -131,7 +131,6 @@ event_new (io, event, func, ...)
     SV	    *io;
     short   event;
     SV	    *func;
-PROTOTYPE: $$&;@
 PREINIT:
     static char *CLASS = "Event::Lib::event";
 CODE:
@@ -143,7 +142,7 @@ CODE:
     New(0, args->ev, 1, struct event);
 
     if (!SvROK(func) && (SvTYPE(SvRV(func)) != SVt_PVCV))
-	croak("Second argument to event_new must be code-reference");
+	croak("Third argument to event_new must be code-reference");
    
     args->io = io;
     args->func = (CV*)SvRV(func);
@@ -289,6 +288,20 @@ CODE:
     if (event_del(args->ev) == 0)
 	XSRETURN_YES;
     XSRETURN_NO;
+}
+
+void
+event_free (args)
+    struct event_args *args;
+CODE:
+{
+    event_del(args->ev);
+    free_args(args);
+
+    /* unbless referent:
+     * this is crucial because access to the object after it
+     * has been freed could lead to segfaults */
+    SvFLAGS(SvRV(ST(0))) &= ~SVs_OBJECT;
 }
 
 void

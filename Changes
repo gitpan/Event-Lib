@@ -1,5 +1,17 @@
 Revision history for Perl extension Event::Lib.
 
+0.10  Thu Nov 10 07:49:00 CET 2005
+    - event_free() was advertised in the docs although
+      it didn't exist; now it does.
+      (spotted by Carlos Guzman <cguzman AT andestel DOT com>
+    - the prototype for event_new() prevented it to take
+      code-refs stored in a variable; the prototype is now gone
+      (patch by Stas Bekman <stas AT stason DOT org>
+    - a misspelling and some bad advice in the PODs of the
+      module rectified
+      (again thanks to Stas Bekman)
+    - only load Carp.pm on demand
+
 0.09  Tue Sep 27 08:01:52 CEST 2005
     - fixed another memory leak showing up in the fh() method
       (spotted by Thomas Yandell <tom AT vipercode DOT com>)
