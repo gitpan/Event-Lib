@@ -3,33 +3,35 @@ BEGIN { plan tests => 2 }
 use Event::Lib;
 use Socket;
 use warnings;
+
 ok(1); 
 
-my $pid = open KID, "|-";
+pipe READER, WRITER;
+
+my $pid = fork;
 skip($!, 1), exit if not defined $pid;
 
 if ($pid) {
-    $| = 1;
-    print KID "ok";
-    close KID;
-} else {
-    event_init;
+    # PARENT
     priority_init(10);	# should never give an error, regardless of libevent version
-    my $event = event_new(\*STDIN, EV_READ, 
+    my $event = event_new(\*READER, EV_READ|EV_PERSIST, 
 	sub {  
 	    my $ev = shift;
 	    my $fh = $ev->fh;
 	    read ($fh, my $buf, 2);
 	    if ($buf eq 'ok') {
 		ok(1);
-		exit;
 	    }
 	    exit;
 	}
     );
     $event->add;
-    $event->dispatch(EVLOOP_ONCE, 10);
+    event_one_loop(10);
     ok(0);
+} else {
+    # CHILD
+    $| = 1;
+    print WRITER "ok\n";
     exit;
 }
 

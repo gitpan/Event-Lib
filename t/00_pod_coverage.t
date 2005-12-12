@@ -6,7 +6,7 @@ if ($@) {
 
 my $ARGS = {
     also_private    => [],
-    trustme	    => [],
+    trustme	    => [ qw/constant event_init/],
 };
 
 all_pod_coverage_ok( $ARGS );

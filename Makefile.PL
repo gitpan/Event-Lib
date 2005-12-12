@@ -5,7 +5,7 @@ use Config;
 my %args = map { split /\s*=\s*/ } @ARGV;
 
 sub have_libevent {
-    my $CC = $Config{cc}.' '.$Config{ccflags}.' ';
+    my $CC = join " ", $Config{cc}, $args{CCFLAGS}, $Config{ccflags}, "-DHAVE_CONFIG_H";
     my $LIBS = $args{ LIBS } || "-levent";
     my $INC = $args{ INC } || "-I/usr/include";
     if ($^O eq "freebsd") {
@@ -122,7 +122,8 @@ if  (eval {require ExtUtils::Constant; 1}) {
 		 EVBUFFER_WRITE EVLIST_ACTIVE EVLIST_ALL EVLIST_INIT
 		 EVLIST_INSERTED EVLIST_INTERNAL EVLIST_SIGNAL EVLIST_TIMEOUT
 		 EVLOOP_NONBLOCK EVLOOP_ONCE EV_PERSIST EV_READ EV_SIGNAL
-		 EV_TIMEOUT EV_WRITE));
+		 EV_TIMEOUT EV_WRITE
+		 _EVENT_LOG_DEBUG _EVENT_LOG_MSG _EVENT_LOG_WARN _EVENT_LOG_ERR));
   ExtUtils::Constant::WriteConstants(
                                      NAME         => 'Event::Lib',
                                      NAMES        => \@names,

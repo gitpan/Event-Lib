@@ -1,5 +1,5 @@
-Event-Lib version 0.09
-======================
+Event-Lib version 0.99_10
+=========================
 
 This module is a Perl wrapper around libevent(3) as available from
 <http://www.monkey.org/~provos/libevent/>.  It allows to execute a function

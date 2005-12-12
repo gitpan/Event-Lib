@@ -10,5 +10,5 @@ my $cl = IO::Socket::INET->new(
 );
 
 print $cl "hello!\n";
-<>;
+print {$cl} <>;
 print $cl "quit\n";

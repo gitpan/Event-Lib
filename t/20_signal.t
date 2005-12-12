@@ -2,6 +2,8 @@ use Test;
 BEGIN { plan tests => 3 }
 
 use Event::Lib;
+use Devel::Peek;
+
 ok(1); 
 
 use POSIX;
@@ -17,10 +19,10 @@ if ($pid) {
     wait;
 } else {
     event_init;
-    my $event = signal_new(SIGHUP, sub { event_free(shift); ok(1); exit });
-    $event->add;
+    signal_new(SIGHUP, sub { ok(1); exit; })->add;
+    
     # we give it ten seconds to receive the signal
-    $event->dispatch(EVLOOP_ONCE, 10);
+    event_one_loop(10);
     ok(0);
     exit;
 }

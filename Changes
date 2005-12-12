@@ -1,5 +1,45 @@
 Revision history for Perl extension Event::Lib.
 
+0.99_10 Sun Dec 11 18:53:46 CET 2005
+
+    **** THIS RELEASE IS NOT BACKWARDS COMPATIBLE ****
+    ****  TO PREVIOUS VERSIONS SO READ THE PODS   ****
+
+    Interface-changes:
+    ------------------
+    - event_dispatch() is gone forever: Its job is now done by three separate
+      functions event_mainloop, event_one_loop, event_one_nbloop. Chose the one
+      most appropriate. Those are no longer instance methods either.
+    - new interface for exception handlers
+    - it's no longer OK to enter the event loop (previously with
+      event_dispatch) more than once. A warning will be raised in such a case
+      and it will be turned into a no-op.
+    - explicit use of free()/event_free() will raise a warning.
+    - event_log_level() allows to specify which libevent log-messages to
+      display
+
+    Internal changes:
+    -----------------
+    - the garbage-collecting has been radically re-done: event_free() is now
+      _strongly_ deprecated. Events are instead freed when they are no longer
+      needed.
+    - libevent's event_set is no longer called from 
+      (event|timer|signal)_new but from event_add() which most notably fixes
+      many ref-count and clean-up issues but is also slightly more efficient.
+    - many spurious items were removed form the list of exported symbols.
+
+    Other:
+    ------
+    - tiny fixes for Makefile.PL: -DHAVE_CONFIG_H is now passed and
+      'perl Makefile.PL CCFLAGS=-static' is possible
+      (thanks to <harm AT tty DOT nl> and one anonymous RT-requestor)
+    - many additions to the test-suite
+    - countless additions to the PODs
+    
+    All of the above has been done with the help and imperturbable patience of
+    Stas Bekman <stas AT stason DOT org> and the other chaps from MailChannels
+    (http://mailchannels.com)
+     
 0.10  Thu Nov 10 07:49:00 CET 2005
     - event_free() was advertised in the docs although
       it didn't exist; now it does.
