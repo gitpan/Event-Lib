@@ -1,5 +1,6 @@
 struct event_args *	EVENT
 struct bufferevent *	EVENT
+const char *		T_PV
 
 OUTPUT
 

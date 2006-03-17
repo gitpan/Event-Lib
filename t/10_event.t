@@ -2,6 +2,7 @@ use Test;
 BEGIN { plan tests => 2 }
 use Event::Lib;
 use Socket;
+
 use warnings;
 
 ok(1); 
@@ -13,7 +14,7 @@ skip($!, 1), exit if not defined $pid;
 
 if ($pid) {
     # PARENT
-    priority_init(10);	# should never give an error, regardless of libevent version
+    event_priority_init(10);	# should never give an error, regardless of libevent version
     my $event = event_new(\*READER, EV_READ|EV_PERSIST, 
 	sub {  
 	    my $ev = shift;

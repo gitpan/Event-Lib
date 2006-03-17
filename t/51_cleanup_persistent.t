@@ -1,6 +1,6 @@
 package MyEvent;
 use Event::Lib;
-use base qw/Event::Lib::base Event::Lib::signal/;
+use base qw/Event::Lib::signal/;
 
 my $_DESTROY = "not called";
 
@@ -56,7 +56,7 @@ if ($pid) {
     wait;
 } else {
     event_init;
-    MyEvent->new(SIGHUP, sub {shift->del})->add;
+    MyEvent->new(SIGHUP, sub {shift->remove})->add;
     ok($_DESTROY, "not called");
     event_one_loop;
     ok($_DESTROY, "called", "Event::Lib::signal::DESTROY called too late");

@@ -8,11 +8,9 @@ require Exporter;
 require XSLoader;
 
 our @ISA = qw(Exporter);
-our $VERSION = '0.99_10';
+our $VERSION = '1.00';
 
 XSLoader::load('Event::Lib', $VERSION);
-
-use constant EVENT_FREE_NOWARN => 1;
 
 eval q{
     use constant _EVENT_LOG_NONE	=> &_EVENT_LOG_ERR + 1;
@@ -23,23 +21,19 @@ eval q{
 
 our %EXPORT_TAGS = ( 'all' => [ qw(
 	event_init
+	event_priority_init
 	event_log_level
 	event_register_except_handler
+	event_fork
+	
 	event_mainloop
 	event_one_loop
 	event_one_nbloop
+	
 	event_new
 	event_add
-	event_del
-	event_free
-	event_once
-	priority_init
 	signal_new
-	signal_add
-	signal_del
 	timer_new
-	timer_add
-	timer_del
 
 	EV_PERSIST
 	EV_READ
@@ -52,35 +46,25 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
 	_EVENT_LOG_WARN
 	_EVENT_LOG_ERR
 	_EVENT_LOG_NONE
-
-	EVENT_FREE_NOWARN
 ) ] );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw(
     event_init
+    event_priority_init
     event_log_level
     event_register_except_handler
+    
     event_mainloop
     event_one_loop
     event_one_nbloop
     
     event_new
-    event_add
-    event_del
-    event_free
-    event_once
-    
     signal_new
-    signal_add
-    signal_del
-   
-    priority_init
-
     timer_new
-    timer_add
-    timer_del
+
+    event_add
 
     EV_PERSIST
     EV_READ
@@ -93,12 +77,9 @@ our @EXPORT = qw(
     _EVENT_LOG_WARN
     _EVENT_LOG_ERR
     _EVENT_LOG_NONE
-
-    EVENT_FREE_NOWARN
 );
 
 *Event::Lib::base::add = \&event_add;
-*Event::Lib::base::del = \&event_del;
 *Event::Lib::base::free = \&event_free;
 
 sub AUTOLOAD {
@@ -189,33 +170,29 @@ and how they differ from I<Event::Lib> further below (L<"OTHER EVENT MODULES">).
 
 =head1 INITIALIZATION
 
-This happens via loading the module via C<use> or C<require>:
+This happens via loading the module via use() or require():
 
     use Event::Lib;
-    
-When you spawn off new processes, you have to call C<event_init> in each new
-process otherwise the kqueue(2) mechanism wont properly initialize:
 
-    use Event::Lib;
-    
-    my $pid = fork;
+No further work is ever required.
 
-    if ($pid) {
-	# parent
-	wait;
-    } else {
-	# I am the child and you have to re-initialize
-	event_init();
-	...
-    }
+Additionally, you may use the following two functions to retrieve some
+information regarding the underlying libevent. These functions are neither
+exported nor exportable so you have to call them fully package-qualified:
 
-Note that when you use C<require> you have to package-qualify every call to
-anything in I<Event::Lib>, unless you call C<< Event::Lib->import >>.
+=head2 * Event::Lib::get_version()
+
+This returns the version of libevent this module was compiled against.
+
+=head2 * Event::Lib::get_method()
+
+This returns the kernel notification method used by libevent. This will be one of
+"select", "poll", "epoll", "devpoll" and "kqueue". 
 
 =head1 EVENTS
 
 The standard procedure is to create a few events and afterwards enter the loop
-(using C<event_mainloop>) to wait for and handle the pending events. This loop
+(using event_mainloop()) to wait for and handle the pending events. This loop
 is truely global and shared even between forked processes. The same is true for
 events that you register. They will all be processed by the same loop, no matter
 where or how you create them.
@@ -230,7 +207,7 @@ seconds.
 
 There's one more little thing to be aware of: Sometimes it may apear that your
 events aren't triggered because they produce no output in spite of your
-precious C<print> statements you put in. If you see no output, then you're a
+precious print() statements you put in. If you see no output, then you're a
 victim of buffering. The solution is to turn on autoflushing, so put
 
     $| = 1;
@@ -240,28 +217,40 @@ at the top of your program if no output appears on your screen or filehandles.
 I<Event::Lib> knows three different kind of events: a filehandle becomes
 readable/writeable, timeouts and signals.
 
-=head2 Watching filehandles
+=head1 Watching filehandles
 
 Most often you will have a set of filehandles that you want to watch and handle
 simultaneously. Think of a webserver handling multiple client requests. Such an 
-event is created with C<event_new>:
+event is created with event_new():
 
-=over 4
-
-=item * event_new( $fh, $flags, $function, [@args] )
+=head2 * event_new($fh, $flags, $function, [@args])
 
 I<$fh> is the filehandle you want to watch. I<$flags> may be the bit-wise ORing
-of I<EV_READ>, I<EV_WRITE> and I<EV_PERSIST>. I<EV_PERSIST> will make the event
+of C<EV_READ>, C<EV_WRITE> and C<EV_PERSIST>. C<EV_PERSIST> will make the event
 persistent, that is: Once the event is triggered, it is not removed from the
 event-loop. If you do not pass this flag, you have to re-schedule the event in
 the event-handler I<$function>.
 
 I<$function> is the callback that is executed when the given event happened.
 This function is always called with at least two arguments, namely the event
-object itself which was created by the above C<event_new> and an integer being
-the event-type that occured (which could be EV_WRITE, EV_READ or EV_TIMEOUT).
-I<@args> is an optional list of additional arguments your callback will
-receive.
+object itself which was created by the above event_new() and an integer being
+the event-type that occured (which could be C<EV_WRITE>, C<EV_READ> or
+C<EV_TIMEOUT>).  I<@args> is an optional list of additional arguments your
+callback will receive.
+
+B<NOTE>: I<$fh> really ought to be a socket or a pipe. Regular files can't be
+handled by at least epoll(2). If, for some reason, you want to put an event on
+a regular file, you have to make sure that a kernel notification method is used
+that can deal with such file-handles. select(2) and poll(2) are good candidates
+as they don't have this limitation. So in order to prevent this limitation, you
+have to do:
+
+    BEGIN {
+	$ENV{ $_ } = 1 for qw/EVENT_NOEPOLL EVENT_NODEVPOLL EVENT_NOKQUEUE/;
+    }
+    use Event::Lib;
+
+See L<"CONFIGURATION"> further below for more details.
 
 The function returns an event object (the very object that is later passed to the 
 callback function).
@@ -286,7 +275,7 @@ from multiple clients:
 	ReuseAddr	=> SO_REUSEADDR,
 	Listen		=> 1,
 	Blocking	=> 0,
-    ) or die $!;
+    ) or die $@;
 
     my $main = event_new($server, EV_READ|EV_PERSIST, \&accept_connection);
 
@@ -295,7 +284,7 @@ from multiple clients:
 
     event_mainloop();
 
-The above can be done without the I<EV_PERSIST> flag as well:
+The above can be done without the C<EV_PERSIST> flag as well:
 
     sub accept_connection {
 	my $event = shift;
@@ -310,11 +299,11 @@ The above can be done without the I<EV_PERSIST> flag as well:
     $main->add;
     event_mainloop();
 
-=item * event_add( $event, [$timeout] )
+=head2 * $event-E<gt>add( [$timeout] )
 
-=item * $event-E<gt>add( [$timeout] )
+Alias: I<event_add( $event, [$timeout] )>
 
-This adds the event previously created with C<event_new> to the event-loop.
+This adds the event previously created with event_new() to the event-loop.
 I<$timeout> is an optional argument specifying a timeout given as
 floating-point number. It means that the event handler is triggered either when
 the event happens or when I<$timeout> seconds have passed, whichever comes
@@ -338,72 +327,53 @@ Consider this snippet:
     event_new(\*STDIN, EV_READ, \&handler)->add(1.5);
     event_one_loop;
 
-If C<STDIN> becomes readable within 1.5 seconds, C<handler> will be called with
+If C<STDIN> becomes readable within 1.5 seconds, handler() will be called with
 I<$type> set to C<EV_READ>. If nothing happens within these 1.5 seconds, it'll
-be called with I<$type> set to <EV_TIMEOUT>.
+be called with I<$type> set to C<EV_TIMEOUT>.
 
 When I<$timeout> is C<0> it behaves as if no timeout has been given, that is:
 An infinite timeout is assumed. Any other timeout is taken literally, so C<0.0>
 is not the same! In such a case, the event handler will be called immediately
 with the event type set to C<EV_TIMEOUT>.
 
-=item * $event-E<gt>fh
+It's a fatal error to add the same event multiple times:
+
+    my $e = event_new(...);
+    $e->add;
+    $e->add;	# this line will die
+
+When an event couldn't be added for some other reason, the event's exception
+handler is called. See L<"EXCEPTION HANDLING"> further below on how exceptions
+raised by event_add() differ from other exceptions.
+
+
+=head2 * $event-E<gt>fh
 
 Returns the filehandle this I<$event> is supposed to watch. You will usually
 call this in the event-handler.
 
-=item * event_del( $event )
-
-=item * $event-E<gt>del
+=head2 * $event-E<gt>remove
 
 This removes an event object from the event-loop. Note that the object itself
 is not destroyed and freed. It is merely disabled and you can later re-enable
 it by calling C<< $event->add >>.
 
-=item * event_free( $event )
-
-=item * $event-E<gt>free
-
-This destroys I<$event> and frees all memory associated with it. After calling this
-function/method, I<$event> is no longer an object and hence no longer usable.
-
-It will also remove the event from the event-loop if it is still in the
-event-queue.  It is ok to use this function after an event has been deleted
-with C<event_delete>.
-
-B<NOTE>: Using this function results in a warning message because it should be
-I<Event::Lib>'s responsibility to free events for you. There's a very high
-probability (close to 100%) that using C<event_free> will result in a segfault.
-
-However, if you really have a scenario where you need to free events manually
-(and can do so without the segfault;-), you can get rid of the warning by doing
-
-    event_free( $event, EVENT_FREE_NOWARN );
-    # or
-    $event->free( EVENT_FREE_NOWARN );
-
-You have been warned.
-
-=back
-
-=head2 Timer-based events
+=head1 Timer-based events
 
 Sometimes you want events to happen periodically, regardless of any filehandles.
-Such events are created with C<timer_new>:
+Such events are created with timer_new():
 
-=over 4
+=head2 * timer_new( $function, [@args] )
 
-=item * timer_new( $function, [@args] )
-
-This is very much the same as C<event_new>, only that it lacks its first two
+This is very much the same as event_new(), only that it lacks its first two
 parameters.  I<$function> is a reference to a Perl function that should be
 executed. As always, this function will receive the event object as returned by
-C<timer_new> as first argument, the type of event (always EV_TIMEOUT) plus the
+timer_new() as first argument, the type of event (always EV_TIMEOUT) plus the
 optional argumentlist I<@args>.
 
-=item * event_add( $event, [$timeout] )
+=head2 * $event-E<gt>add( [$timeout] )
 
-=item * $event-E<gt>add( [$timeout] )
+Alias: I<event_add( $event, [$timeout] )>
 
 Adds I<$event> to the event-loop. The event is scheduled to be triggered every
 I<$timeout> seconds where I<$timeout> can be any floating-point value. If
@@ -420,33 +390,31 @@ your program to keep running, wrap this statement into an eval block:
 Note that timer-based events are not persistent so you have to call this
 method/function again in the event-handler in order to re-schedule it.
 
-=item * event_del( $event )
+It's a fatal error to add the same event multiple times:
 
-=item * $event-E<gt>del
+    my $e = timer_new(...);
+    $e->add;
+    $e->add;	# this line will die
+
+When an event couldn't be added for some other reason, the event's exception
+handler is called. See L<"EXCEPTION HANDLING"> further below on how exceptions
+raised by event_add() differ from other exceptions.
+
+=head2 * $event-E<gt>remove
 
 This removes the timer-event I<$event> from the event-loop. Again, I<$event>
-remains intact and may later be re-scheduled with C<event_add>.
+remains intact and may later be re-scheduled with event_add().
 
-=item * event_free( $event )
-
-=item * $event-E<gt>free
-
-The same as its counterpart for filehandle-events, so please see above.
-
-=back
-
-=head2 Signal-based events
+=head1 Signal-based events
 
 Your program can also respond to signals sent to it by other applications. To handle
-signals, you create the corresponding event using C<signal_new>.
+signals, you create the corresponding event using signal_new().
 
 Note that thusly created events take precedence over event-handlers defined in
 C<%SIG>. That means the function you assigned to C<$SIG{ $SIGNAME }> will never be 
 executed if a C<Event::Lib>-handler for C<$SIGNAME> also exists.
 
-=over 4
-
-=item * signal_new( $signal, $function, [@args] )
+=head2 * signal_new( $signal, $function, [@args] )
 
 Sets up I<$function> as a handler for I<$signal>. I<$signal> has to be an
 integer specifying which signal to intercept and handle. For example, C<15> is
@@ -464,11 +432,11 @@ As always, I<$function> receives the event object as first argument, the
 event-type (always EV_SIGNAL) as second. I<@args> specifies an option list of
 values that is to be passed to the handler.
 
-=item * event_add( $event, [$timeout] )
+=head2 * $event-E<gt>add( [$timeout] )
 
-=item * $event-E<gt>add( [$timeout] )
+Alias: I<event_add( $event, [$timeout] )>
 
-Adds the signal-event previously created with C<signal_new> to the event-loop.
+Adds the signal-event previously created with signal_new() to the event-loop.
 I<$timeout> is an optional argument specifying a timeout given as
 floating-point number. It means that the event handler is triggered either when
 the event happens or when I<$timeout> seconds have passed, whichever comes
@@ -484,7 +452,7 @@ only once:
     sub sigint {
 	my $event = shift;
 	print "Someone hit ctrl-c";
-	$event->del;
+	$event->remove;
     }
     
     my $signal = signal_new(SIGINT, \&sigint);
@@ -503,21 +471,23 @@ Subsequently, a persistent and timeouted signal-handler would read thusly:
     $signal->add(2.5);
     event_mainloop();
 
-=item * event_del( $event )
+It's a fatal error to add the same event multiple times:
 
-=item * $event-E<gt>del
+    my $e = signal_new(...);
+    $e->add;
+    $e->add;	# this line will die
 
-=item * $event-E<gt>free
+When an event couldn't be added for some other reason, the event's exception
+handler is called. See L<"EXCEPTION HANDLING"> further below on how exceptions
+raised by event_add() differ from other exceptions.
+
+=head2 * $event-E<gt>remove
 
 The same as their counterparts for filehandle-events, so please see above.
 
-=back 
+=head1 COMMON METHODS
 
-=head2 Common methods
-
-=over 4
-
-=item * $event-E<gt>pending
+=head2 * $event-E<gt>pending
 
 This will tell you whether I<$event> is still in the event-queue waiting to be
 processed.  More specifically, it returns a false value if I<$event> was
@@ -526,14 +496,29 @@ I<$event> is still in the queue it returns the amount of seconds as a
 floating-point number until it is triggered again. If I<$event> has no attached
 timeout, it returns C<0 but true>.
 
-=item * $event-E<gt>callback
+=head2 * $event-E<gt>args( [@args] )
+
+When called with no arguments, it will in scalar context return the number of 
+additional arguments associated with I<$event>. In list context, it returns
+those arguments as one list.
+
+When I<@args> is given, the current list of arguments for I<$event> is replaced
+with I<@args> and nothing is returned.
+
+=head2 * $event-E<gt>args_del
+
+This will remove all additional arguments from I<$event> so the next time the
+event handler is called, the list of additional arguments passed to it will 
+be empty.
+
+=head2 * $event-E<gt>callback
 
 Returns the callback associated with this event as code-reference so that you
 can call it manually in case you think you need that:
 
     $event->callback->($event, $event->fh, @args);
 
-=item * except_handler( $function )
+=head2 * $event-E<gt>except_handler( $function )
 
 You can associate an exception handler with each event which gets called in
 case the callback for that event dies. I<$function> is a Perl code-reference
@@ -542,12 +527,124 @@ message with which the event handler died, the type of event and any additional
 arguments associated with that event. That way you can inspect the
 circumstances and provide your own error-handling.
 
-Please see the next section L<"Exception handling"> for some background and
-more details.
+Please see L<"EXCEPTION HANDLING"> for some background and more details.
 
-=back
+=head1 ENTERING THE EVENT-LOOP
 
-=head2 Exception handling
+I<Event::Lib> offers three functions to process pending events.
+
+=head2 * event_mainloop ()
+
+This function will start the event-loop and never return, generally. More
+precisely, it will return if either the program ran out of events in which case
+event_mainloop() returns a true value. In case of an error during
+event-processing, it will return a false value in which case you should check
+C<$!>.
+
+B<IMPORTANT>: When any of your events register new events they will be added to
+the global queue of events and be handled in the same loop. You are therefore
+not allowed to call event_mainloop() more than once in your program.
+Attempting to do so will yield a warning and the operation is silently turned
+into a no-op.
+
+=head2 * event_one_loop( [$timeout] )
+
+This function will do exactly one loop which means the next pending event is
+handled. In case no event is currently ready for processing, it will block and wait
+until one becomes processible.
+
+If I<$timeout> is specified, it will wait at most I<$timeout> seconds and then
+return.
+
+=head2 * event_one_nbloop ()
+
+This is the I<n>on-I<b>locking counterpart to event_one_loop(): It returns
+immediately when no event is ready to be processed. Otherwise the next imminent
+event is handled.
+
+You want to use either event_one_loop() or event_one_nbloop() instead of
+event_mainloop() if you want to write your own event-loop. The core of such a
+program could look like this:
+
+    event_new(...)->add;
+    event_new(...)->add;
+    timer_new(...)->add;
+    ...
+    
+    while () {
+	event_one_nbloop();
+	...
+	select undef, undef, undef, 0.05;   # sleep for 0.05 seconds
+    }
+
+=head1 EVENT LIFECYCLE
+
+It is important to understand the lifetime of events because concepts such as
+scope and visibility have little meaning with respect to events.
+
+When you add an event to the queue using event_add(), this event will remain
+there until it is triggered, no matter what you do with the object returned by
+event_new(), timer_new() and signal_new() respectively. Consider this code:
+
+    use Event::Lib;
+    $| = 1;
+    
+    my $event = timer_new(sub { print "timer called\n" });
+    
+    # schedule the timer to go off in ten seconds
+    $event->add(10);
+    
+    undef $event;
+    event_mainloop;
+    
+This program will, regardless of the C<undef $event>, print "timer called".  As
+a consequence, there is only one true and correct way to cancel an event,
+namely by calling remove() on it. Likewise:
+
+    use warnings;
+    use Event::Lib;
+    $| = 1;
+    
+    my $event = timer_new(sub { print "Called after two seconds\n" });
+    $event->add(2);
+    $event = timer_new(sub { print "Called after three seconds\n" });
+    $event->add(3);
+
+    event_mainloop;
+    
+    __END__
+    Explicit undef() of or reassignment to pending event at - line 8.
+    Called after two seconds
+    Called after three seconds
+
+So even though you have only one Perl object container C<$event>, you have two
+events!
+
+As this can become hard to maintain in complex programs, Event::Lib will emmit
+a warning if any of the above cases is detected and if you have warnings
+enabled. If you don't want this warning turn it off temporarily. The above
+program then becomes:
+
+    use warnings;
+    use Event::Lib;
+    $| = 1;
+    
+    my $event = timer_new(sub { print "Called after two seconds\n" });
+    $event->add(2);
+    
+    {
+	no warnings 'misc';
+	$event = timer_new(sub { print "Called after three seconds\n" });
+	$event->add(3);
+    }
+
+    event_mainloop;
+    
+Note that the line following the undef() or the reassignment has to be within
+the C<no warnings 'misc'>-block because this is the line where this warning is
+actually triggered and not the line with the undef() or reassignment itself.
+
+=head1 EXCEPTION HANDLING
 
 Some programs simply cannot afford to die. It is a possible that a callback is
 triggered and finds itself in a situation where it just cannot proceed. Think
@@ -560,13 +657,11 @@ was previously triggered with (plus the error message as second argument) which
 gives you the change to further investigate the cause of the failure and
 possibly take counter-measures.
 
-You can register exception handlers per event using the C<except_handler>
+You can register exception handlers per event using the except_handler()
 method.  Furthermore, you can register one global exception handler that is
 going to be used for all events that don't have their own handler:
 
-=over 4
-
-=item * event_register_except_handler( $function )
+=head2 * event_register_except_handler( $function )
 
 I<$function> is a code-reference that will be called whenever the callback
 of an event dies:
@@ -582,118 +677,192 @@ of an event dies:
     event_register_except_handler(\&handler);
     ...
 
-If you don't call C<event_register_except_handler> I<Event::Lib> will use its
+If you don't call event_register_except_handler() I<Event::Lib> will use its
 own basic default handler. This handler simply dies with the original error
 message.
 
+=head2 Exceptions raised by event_add()
+
+If the exception was raised by event_add(), then the event's exception handler
+is called. This is either the one registered with except_handler() on a
+per-event basis, the global one set via event_register_except_handler() or, if
+both of these was not done, the default handler.
+
+In any case, the exception handler called from event_add() is called with
+slightly different arguments. This is in order to allow the handler to
+distinguish between the case where an exception was raised by an event-handler
+or where it was raised by event_add().
+
+The first two arguments being the event in question and the error message are
+the same for both kind of exceptions. What differs is the third argument,
+I<$type>. It will always be negative when event_add() triggered this
+exception.
+
+In particular, the type of event I<$type> will be for a...
+
+=over 4
+
+=item ... filehandle-event:
+
+The negated type-flags with which the event was created. This means that for
+the following exception-handler and when C<< $e->add >> failed:
+
+    sub exception_handler {
+	my ($e, $err, $evtype, @args) = @_;
+	
+	# ref($e) eq "Event::Lib::event"
+	# $err =~ /^Couldn't add event at/
+	# $evtype == -(EV_READ|EV_PERSIST)
+	# @args == (1, 2, 3)
+	# $! will contain the OS-level error
+    }
+	
+    my $e = event_new(\*FH, EV_READ|EV_PERSIST, \&handler, 1 .. 3);
+    ...
+    $e->add;
+
 =back
 
-=head2 Priorities
+=over 4
+
+=item ... timer-event:
+
+I<$type> will be -EV_TIMEOUT:
+
+    sub exception_handler {
+	my ($e, $err, $evtype, @args) = @_;
+	
+	# ref($e) eq "Event::Lib::timer"
+	# $err =~ /^Couldn't add event at/
+	# $evtype == -EV_TIMEOUT
+	# @args == (1, 2, 3)
+    }
+	
+    my $e = timer_new(\&handler, 1 .. 3);
+    ...
+    $e->add;
+
+=back
+
+=over 4
+
+=item ... signal-event:
+
+I<$type> will be the negated signal number this event was supposed to handle:
+
+    sub exception_handler {
+	my ($e, $err, $evtype, @args);
+	
+	# ref($e) eq "Event::Lib::signal"
+	# $err =~ /^Couldn't add event at/
+	# $evtype == -SIGTERM
+	# @args == (1, 2, 3)
+    }
+	
+    my $e = signal_new(SIGTERM, \&handler, 1 .. 3);
+    ...
+    $e->add;
+
+=back
+
+As a consequence, first have your exception-handler test the sign of $evtype.
+If it was negative, use C<< ref($e) >> to extract the kind of event.
+
+=head1 PRIORITIES
 
 Events can be assigned a priority. The lower its assigned priority is, the
 earlier this event is processed. Using prioritized events in your programs
 requires two steps. The first one is to set the number of available priorities.
 Setting those should happen once in your script and before calling
-C<event_mainloop>:
+event_mainloop():
 
-=over 4
-
-=item * priority_init( $priorities )
+=head2 * event_priority_init( $priorities )
 
 Sets the number of different events to I<$priorities>.
 
-=back
-
 Assigning a priority to each event then happens thusly:
 
-=over 4
-
-=item * $event-E<gt>set_priority( $priority )
+=head2 * $event-E<gt>set_priority( $priority )
 
 Gives I<$event> (which can be any of the three type of events) the priority
 I<$priority>. Remember that a lower priority means the event is processed
 earlier!
 
-=back
-
 B<Note:> If your installed version of libevent does not yet contain priorities
 which happens for pre-1.0 versions, the above will become no-ops. Other than
 that, your scripts will remain functional.
 
-=head1 ENTERING THE EVENT-LOOP
 
-I<Event::Lib> offers three functions to process pending events.
+=head1 FUNCTIONS FOR DEBUGGING, TRACING ET AL.
+   
+There are some functions that will aid you in finding problems in your
+program or even to assure you that your program is ok but there might be a bug
+in I<Event::Lib>.
 
-=over 4
-
-=item * event_mainloop ()
-
-This function will start the event-loop and never return.  More precisely, it
-will return only if there was an error. 
-
-B<IMPORTANT>: When any of your events register new events they will be added to
-the global queue of events and be handled in the same loop. You are therefore
-not allowed to call C<event_mainloop> more than once in your program.
-Attempting to do so will yield a warning and the operation is silently turned
-into a no-op.
-
-=item * event_one_loop( [$timeout] )
-
-This function will do exactly one loop which means the next pending event is
-handled. In case no event is currently ready for processing, it will block and wait
-until one becomes processible.
-
-If I<$timeout> is specified, it will wait at most I<$timeout> seconds and then
-return.
-
-=item * event_one_nbloop ()
-
-This is the I<n>on-I<b>locking counterpart to C<event_one_loop>: It returns
-immediately when no event is ready to be processed. Otherwise the next imminent
-event is handled.
-
-=back
-
-You want to use either C<event_one_loop> or C<event_one_nbloop> instead of
-C<event_mainloop> if you want to write your own event-loop. The core of such a
-program could look like this:
-
-    event_new(...)->add;
-    event_new(...)->add;
-    timer_new(...)->add;
-    ...
-    
-    while () {
-	event_one_nbloop();
-	...
-	select undef, undef, undef, 0.05;   # sleep for 0.05 seconds
-    }
-
-=head1 DEBUGGING, TRACING ET AL.
-    
-=head2 Seeing libevent trace messages
+=head2 * event_log_level( $loglevel )
 
 You can specify what kind of messages Event::Lib should dump to stderr by using
-the following function:
-
-=over
-
-=item * event_log_level ( $loglevel )
+thid function.
 
 I<$loglevel> is one of _EVENT_LOG_DEBUG, _EVENT_LOG_MSG, _EVENT_LOG_WARN,
 _EVENT_LOG_ERR and _EVENT_LOG_NONE and will instruct I<Event::Lib> to only
 output messages of at least that severity. C<_EVENT_LOG_NONE> will suppress any
-messages. Not calling this function is equivalent to
+messages. Not calling this function is equivalent to doing
 
     event_log_level( _EVENT_LOG_ERR );
 
-=back
+=head2 * $event-E<gt>trace
+
+This turns on tracing for I<$event>. Tracing means that diagnostic messages
+are written to STDERR whenever something happens to this I<$event>. This
+includes implicit action such as the destruction of an event or explicit things
+like calling add() or remove() or other methods on I<$event>.
+
+Returns I<$event> so that you can easily plug it into your code:
+
+    event_new(...)->trace->add;
+
+Once an event is traced, there is as of now no way to untrace it again.
+
+=head2 * Event::Lib::Debug::get_pending_events()
+
+This function is only available when you built I<Event::Lib> with
+C<DEFINE=-DEVENT_LIB_DEBUG> (as an argument to perl
+Makefile.PL). Additionally, you have to run your program with the
+environment variable C<EVENT_LIB_DEBUG_PENDING> set in order to get
+any output from this function. The environment has to be set before
+C<use Event::Lib;>:
+
+    BEGIN {
+	$ENV{ EVENT_LIB_DEBUG_PENDING } = 1;
+    }
+
+    use Event::Lib;
+
+or by setting it in your shell. For the bash, this looks like:
+
+    $ EVENT_LIB_DEBUG_PENDING=1 perl event_script.pl
+
+This function will return a list of all currently still pending events. Each
+element of this list is a reference to an array, where the first element is the
+event object, the second the type of event (C<EV_TIMEOUT>, C<EV_SIGNAL>,
+C<EV_READ> etc.) and the remaining elements the additional arguments this event
+was constructed with.
+
+=head2 * Event::Lib::Debug::dump_pending_events()
+
+Similar to the above, only that it will dump all currently pending events to
+STDERR with some additional information that might be of interest.
+
+Again, this is only available when the module was build with
+C<-DEVENT_LIB_DEBUG> and with the environment variable
+C<EVENT_LIB_DEBUG_PENDING> set.
 
 =head1 CONFIGURATION
 
 I<Event::Lib> can be told which kernel notification method B<not> to use. This
 happens via the use of environment variables (there is no other way due to
-libevent). They have to be set in a BEGIN-block before you C<use>
+libevent). They have to be set in a BEGIN-block before you use()
 I<Event::Lib>:
 
     BEGIN {
@@ -727,11 +896,15 @@ variable available:
 
 =over 4
 
-=item * EVENT_SHOW_METHOD
+=item * EVENT_LOG_LEVEL
 
-This will make I<Event::Lib> emit a short message at C<use>-time telling 
-you which of the available kernel notification methods it uses. This variable
-may be bundled with one of the C<EVENT_NO*> variables.
+This is the environment-variable version of set_log_level() intended to conveniently
+run your script more verbosely for debugging purpose. The lower this value is,
+the more informational output libevent produces on STDERR. C<EVENT_LOG_LEVEL=0>
+means maximum debugging output whereas C<EVENT_LOG_LEVEL=4> means no output at
+all:
+
+    $ EVENT_LOG_LEVEL=0 perl your_script.pl
 
 =back
 
@@ -769,7 +942,7 @@ TCP server serving many clients at once. It makes use of all three kinds of even
 	    if (/^quit$/) {
 		# this client says goodbye
 		close $h;
-		$e->free;
+		$e->remove;
 		last;
 	    }
 	}
@@ -800,7 +973,7 @@ TCP server serving many clients at once. It makes use of all three kinds of even
 	ReuseAddr   => SO_REUSEADDR,
 	Listen	    => 1,
 	Blocking    => 0,
-    ) or die $!;
+    ) or die $@;
 
     my $main  = event_new($server, EV_READ|EV_PERSIST, \&handle_incoming);
     my $timer = timer_new(\&show_time);
@@ -821,7 +994,7 @@ a few several simultaneous instances:
 	Proto	    => 'tcp',
 	PeerAddr    => 'localhost',
 	PeerPort    => 9000,
-    );
+    ) or die $@;
 
     print $server "HI!\n";
     sleep 10;
@@ -864,6 +1037,23 @@ you to think in POE concepts. For medium- and large-sized applications, this doe
 have to be a bad thing. Once grokked, it's easy to add more components to your
 project, so it's almost infinitely extensible.
 
+=head2 Stem
+
+Stem is a very close rival to POE and they are nose-to-nose when it comes to
+features. However, Stem's design is a lot easier to understand and to adapt to
+your need, mostly because it doesn't come up with its own methodology and
+terminology. It is very well thought out without being over-designed.
+
+It's easy and straight-forward to do simple event-looping (it currently comes
+with its own well-conceived event loop; additionally it can make use of
+I<Event> when available). So called Stem cells can be easily plugged together
+to build big applications where these cells can run in parallel, both in an
+asynchronous or synchronized fashion.
+
+It's main drawback (as of now) is its lack of documentation. However, It's been
+written in a clean way so its source can often serve as a drop-in replacement for 
+the lack of documentation.
+
 =head2 Conclusion
 
 Use the right tools for your job. I<Event::Lib> and I<Event> are good for writing
@@ -872,9 +1062,9 @@ to watch resources and do some work when something interesting happens with thos
 resources. Once the work needed to be carried out per event gets too complex, you 
 may still use C<fork>.
 
-Or you use I<POE>. You get the watching and notifying capabilities alright, but
-also the power to do things in parallel without creating threads or child
-processes manually.
+Or you use I<Stem> or I<POE>. You get the watching and notifying capabilities
+alright, but also the power to do things in parallel without creating threads
+or child processes manually.
 
 =head1 EXPORT
 
@@ -882,16 +1072,16 @@ This modules exports by default the following functions:
     
     event_init
     event_log_level
-    priority_init
+    event_priority_init
     event_register_except_handler
+    event_fork
     
     event_new
     timer_new
     signal_new
 
     event_add
-    event_del
-    event_free
+    
     event_mainloop
     event_one_loop
     event_one_nbloop
@@ -908,22 +1098,37 @@ plus the following constants:
     _EVENT_LOG_WARN
     _EVENT_LOG_ERR
     _EVENT_LOG_NONE
-    EVENT_FREE_NOWARN
 
 =head1 BUGS
 
-This is a beta-release therefore there are still some unresolved issues.
-However, even then it should be more stable than the previous 0.10 release.
-
 This library is not thread-safe.
 
+The module has turned out to be quite stable under stress-situations handling
+many thousands simultaneous connections with a very decent performance which it
+owes to the underlying libevent. However, event-based applications can reach a
+stupendous complexity and it is not possible to foresee every kind of
+conceivable scenario.
+
+If you therefore find a bug (a crash, a memory leak, inconsistencies or
+omissions in this documentation, or just about anything else), don't hesitate
+to contact me. See L<"AUTHOR"> further below for details.
+
 =head1 TO-DO
+
+Thread-safety is high on the list. Recent libevent has thread-support which
+will make this fairly easy.
 
 Not all of libevent's public interface is implemented. The buffered events are still
 missing. They will be added once I grok what they are for.
 
-Neither did I yet look into libevent's experimental thread-support. Once the
-"experimental" flag is removed, I might do that.
+=head1 THANKS
+
+This module wouldn't be in its current state without the patient and
+professional help of MailChannels Corporation (http://www.mailchannels.com).
+Over the course of five months, Stas Bekman, Ken Simpson and Mike Smith
+exchanged hundreds of emails with me, pointing out the many glitches that were
+in the module and coming up with test-cases that made it possible for me to fix
+all these issues.
 
 =head1 SEE ALSO
 
@@ -934,7 +1139,7 @@ Also the manpage of event(3).
 
 =head1 VERSION
 
-This is beta-version 0.99_10.
+This is version 1.00.
 
 =head1 AUTHOR
 
@@ -942,7 +1147,7 @@ Tassilo von Parseval, E<lt>tassilo.von.parseval@rwth-aachen.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004-2005 by Tassilo von Parseval
+Copyright (C) 2004-2006 by Tassilo von Parseval
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.4 or,

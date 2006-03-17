@@ -25,7 +25,7 @@ event_one_loop;
 ok($_DESTROY, "called", "Event::Lib::timer::DESTROY called too late");
 
 $_DESTROY = "not called";
-MyEvent->new(sub {shift->add(0.25)})->add(0.25);
+MyEvent->new(sub {(shift)->add(1);})->add(0.25);
 ok($_DESTROY, "not called");
 event_one_loop;
 ok($_DESTROY, "not called", "Event::Lib::timer::DESTROY erroneously called");

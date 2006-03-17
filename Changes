@@ -1,44 +1,40 @@
 Revision history for Perl extension Event::Lib.
 
-0.99_10 Sun Dec 11 18:53:46 CET 2005
-
+1.0 Fri Mar 17 10:20:49 CET 2006
+    
+    **************************************************
     **** THIS RELEASE IS NOT BACKWARDS COMPATIBLE ****
     ****  TO PREVIOUS VERSIONS SO READ THE PODS   ****
+    **************************************************
 
-    Interface-changes:
-    ------------------
     - event_dispatch() is gone forever: Its job is now done by three separate
       functions event_mainloop, event_one_loop, event_one_nbloop. Chose the one
-      most appropriate. Those are no longer instance methods either.
-    - new interface for exception handlers
+      most appropriate. Those are no longer instance methods either. See the section
+      "ENTERING THE EVENT-LOOP" in the documentation for details.
+    - new interface for exception handlers. See the section "EXCEPTION HANDLING"
+      in the documentation.
+    - event_free/free are gone and event_del/del have become remove().
+      See the section "EVENT LIFECYCLE" in the documentation to learn how event-cleanup
+      is now done.
     - it's no longer OK to enter the event loop (previously with
       event_dispatch) more than once. A warning will be raised in such a case
       and it will be turned into a no-op.
-    - explicit use of free()/event_free() will raise a warning.
     - event_log_level() allows to specify which libevent log-messages to
       display
-
-    Internal changes:
-    -----------------
-    - the garbage-collecting has been radically re-done: event_free() is now
-      _strongly_ deprecated. Events are instead freed when they are no longer
-      needed.
-    - libevent's event_set is no longer called from 
-      (event|timer|signal)_new but from event_add() which most notably fixes
-      many ref-count and clean-up issues but is also slightly more efficient.
-    - many spurious items were removed form the list of exported symbols.
-
-    Other:
-    ------
-    - tiny fixes for Makefile.PL: -DHAVE_CONFIG_H is now passed and
-      'perl Makefile.PL CCFLAGS=-static' is possible
-      (thanks to <harm AT tty DOT nl> and one anonymous RT-requestor)
-    - many additions to the test-suite
-    - countless additions to the PODs
+    - event_init no longer needs to be called in child processes
+    - there's an extensive debugging-interface, enabled via
+        $ perl Makefile.PL DEFINE=-DEVENT_LIB_DEBUG
+      in case you run into problems with your application. 
+    - access to the additional event arguments via the args() and args_del()
+      instance-methods. This will allow you to change the arguments on the fly
+      without having to create a fresh event.
+    - the documentation is a lot more comprehensive now hopefully less
+      ambiguous.
+    - a new and extensive test-suite.
     
-    All of the above has been done with the help and imperturbable patience of
-    Stas Bekman <stas AT stason DOT org> and the other chaps from MailChannels
-    (http://mailchannels.com)
+    There is probably more which I forgot. All of the above has been done with
+    the help and imperturbable patience of the hackers at mailchannels.com
+    (Stas Bekman, Ken Simpson, Mike Smith). Event::Lib 1.0 owes them big time!
      
 0.10  Thu Nov 10 07:49:00 CET 2005
     - event_free() was advertised in the docs although

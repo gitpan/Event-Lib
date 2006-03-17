@@ -16,7 +16,7 @@ my $PATH = "t/sock-$$";
 
 unless (fork) {
       sleep 1;
-      my $real_client = IO::Socket::UNIX->new(Peer => $PATH) or die $!;
+      my $real_client = IO::Socket::UNIX->new(Peer => $PATH) or die $@;
       $real_client->autoflush(1);
       $real_client->write("foobar");
       sleep 1;
@@ -48,7 +48,7 @@ else {
           my $read = sysread($e->fh, my $buf, 1024);
           $buf =~ s/\r?\n//g;
           unless ($buf =~ /:/) {
-              my $t = timer_new(\&_handle_throttled_event, $e);
+              my $t = timer_new(\&_handle_event, $e);
               $t->add(1);
 	      ok(1);
           }
@@ -60,7 +60,7 @@ else {
           }
       }
 
-      sub _handle_throttled_event {
+      sub _handle_event {
           my ($e, $e_type, $io_event) = @_;
           $io_event->add();
 	  ok(1);

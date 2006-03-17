@@ -4,17 +4,21 @@ use Config;
 
 my %args = map { split /\s*=\s*/ } @ARGV;
 
+# purge @ARGV of CCFLAGS
+
+@ARGV = grep !/CCFLAGS=/, @ARGV;
+
 sub have_libevent {
-    my $CC = join " ", $Config{cc}, $args{CCFLAGS}, $Config{ccflags}, "-DHAVE_CONFIG_H";
+    my $CC = join " ", $args{CC} || $Config{cc}, $args{CCFLAGS}, $Config{ccflags};
     my $LIBS = $args{ LIBS } || "-levent";
     my $INC = $args{ INC } || "-I/usr/include";
     if ($^O eq "freebsd") {
-      $LIBS = "-L/usr/local/lib $LIBS";
-      $INC  = "-I/usr/local/include $INC";
+      $LIBS = "$LIBS -L/usr/local/lib";
+      $INC  = "$INC -I/usr/local/include";
     }
     elsif ($^O eq "darwin") {
-      $LIBS = "-L/sw/lib $LIBS";
-      $INC  = "-I/sw/include $INC";
+      $LIBS = "$LIBS -L/sw/lib";
+      $INC  = "$INC -I/sw/include";
     }
 
     print "Checking existance of libevent...";
@@ -74,7 +78,7 @@ sub get_defines {
 	print "no\n";
     }
 
-    print "Additional defines: $DEFINE\n\n";
+    print "Additional defines: $args{DEFINE} $DEFINE\n\n";
     return $DEFINE;
 }
 
@@ -101,6 +105,8 @@ my $DEFINES = get_defines(
 				    define	=> '-DHAVE_LOG_CALLBACKS', },
 );
 
+#exit;
+
 WriteMakefile(
     NAME            => 'Event::Lib',
     VERSION_FROM    => 'lib/Event/Lib.pm', 
@@ -108,10 +114,12 @@ WriteMakefile(
     ABSTRACT_FROM   => 'lib/Event/Lib.pm', 
     AUTHOR	    => 'Tassilo von Parseval <tassilo.von.parseval@rwth-aachen.de>',
     LIBS            => [ $args{LIBS} ], 
-    DEFINE          => "-DHAVE_CONFIG_H $DEFINES", 
     INC             => $args{INC} ,
+    H		    => [ qw/event_debug.h dhash.h/ ],
+    XS		    => { 'Lib.xs' => 'Lib.c' },
     clean	    => { FILES => "a.out config.c" },
 );
+
 
 if  (eval {require ExtUtils::Constant; 1}) {
   # If you edit these definitions to change the constants used by this module,
@@ -140,4 +148,22 @@ else {
     my $fallback = File::Spec->catfile('fallback', $file);
     copy ($fallback, $file) or die "Can't copy $fallback to $file: $!";
   }
+}
+
+package MY;
+
+# need to override here so that DEFINE=... on commandline works
+# along with the DEFINEs internally diddled out by Makefile.PL
+sub constants {
+    my $self = shift;
+    $self->{DEFINE} .= " -DHAVE_CONFIG_H $DEFINES";
+    $self->SUPER::constants;
+}
+
+sub cflags {
+    my $self = shift;
+    my $flags = $self->SUPER::cflags;
+    $flags =~ s/(CCFLAGS\s=\s.+)$/$1 $args{CCFLAGS}/m;
+    return $flags;
+    
 }

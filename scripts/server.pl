@@ -30,7 +30,7 @@ sub handle_client {
 	if (/^quit$/) {
 	    # this client says goodbye
 	    close $h;
-	    $e->free;
+	    $e->del;
 	    last;
 	}
     }
