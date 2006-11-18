@@ -1,5 +1,9 @@
 Revision history for Perl extension Event::Lib.
 
+1.01 Sat Nov 18 09:44:30 EST 2006
+    - parens are needed for calls to croak to make it work on bleedperl
+      (spotted by Andreas Koenig <andk AT cpan DOT org>)
+
 1.0 Fri Mar 17 10:20:49 CET 2006
     
     **************************************************

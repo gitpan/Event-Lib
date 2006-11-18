@@ -8,7 +8,7 @@ require Exporter;
 require XSLoader;
 
 our @ISA = qw(Exporter);
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 XSLoader::load('Event::Lib', $VERSION);
 
@@ -91,13 +91,13 @@ sub AUTOLOAD {
     ($constname = $AUTOLOAD) =~ s/.*:://;
     if ($constname eq 'constant') {
 	require Carp;
-	Carp::croak "&Event::Lib::constant not defined";
+	Carp::croak("&Event::Lib::constant not defined");
     }
 
     my ($error, $val) = constant($constname);
     if ($error) { 
 	require Carp;
-	Carp::croak $error; 
+	Carp::croak($error);
     }
 
     {
@@ -1139,7 +1139,7 @@ Also the manpage of event(3).
 
 =head1 VERSION
 
-This is version 1.00.
+This is version 1.01.
 
 =head1 AUTHOR
 
