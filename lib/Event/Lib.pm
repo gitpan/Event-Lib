@@ -8,7 +8,7 @@ require Exporter;
 require XSLoader;
 
 our @ISA = qw(Exporter);
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 XSLoader::load('Event::Lib', $VERSION);
 
@@ -1139,7 +1139,7 @@ Also the manpage of event(3).
 
 =head1 VERSION
 
-This is version 1.01.
+This is version 1.02.
 
 =head1 AUTHOR
 
@@ -1147,7 +1147,7 @@ Tassilo von Parseval, E<lt>tassilo.von.parseval@rwth-aachen.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004-2006 by Tassilo von Parseval
+Copyright (C) 2004-2007 by Tassilo von Parseval
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.4 or,

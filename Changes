@@ -1,5 +1,10 @@
 Revision history for Perl extension Event::Lib.
 
+1.02 Mo Mai 21 06:36:03 EDT 2007
+    - fixed exception handling such that exception objects will not be
+      stringified anymore 
+      (patch by Torsten Foertsch <torsten DOT foertsch AT gmx DOT net>)
+
 1.01 Sat Nov 18 09:44:30 EST 2006
     - parens are needed for calls to croak to make it work on bleedperl
       (spotted by Andreas Koenig <andk AT cpan DOT org>)

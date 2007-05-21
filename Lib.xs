@@ -158,7 +158,7 @@ SV * do_exception_handler (pTHX_ short event, SV *ev, SV *err) {
     count = call_sv((SV*)args->trapper, G_SCALAR|G_EVAL);
     
     if (SvTRUE(ERRSV))
-	croak("%s", SvPV_nolen(ERRSV));
+	croak(Nullch);
     
     SPAGAIN;
     
@@ -284,7 +284,9 @@ void
 _default_callback (...)
 CODE:
 {
-    croak("%s", SvPV_nolen(ST(1)));
+    sv_setsv(ERRSV, ST(1));
+    croak(Nullch);
+    PERL_UNUSED_VAR(items); /* to silence the compiler */
 }
  
 void
@@ -384,7 +386,7 @@ CODE:
     SvREFCNT_inc(args->io);
     SvREFCNT_inc(args->func);
 
-    if (args->buckets = args->num = items - 3) 
+    if ((args->buckets = args->num = items - 3)) 
 	New(0, args->args, args->buckets, SV*);
     else
 	args->args = NULL;
@@ -437,7 +439,7 @@ CODE:
 
     SvREFCNT_inc(args->func);
     
-    if (args->buckets = args->num = items - 2)
+    if ((args->buckets = args->num = items - 2))
 	New(0, args->args, args->buckets, SV*);
     else
 	args->args = NULL;
@@ -489,7 +491,7 @@ CODE:
 
     SvREFCNT_inc(args->func);
     
-    if (args->buckets = args->num = items - 1)
+    if ((args->buckets = args->num = items - 1))
 	New(0, args->args, args->buckets, SV*);
     else
 	args->args = NULL;
