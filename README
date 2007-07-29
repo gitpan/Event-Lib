@@ -1,4 +1,4 @@
-Event-Lib version 1.00
+Event-Lib version 1.03
 =========================
 
 This module is a Perl wrapper around libevent(3) as available from
@@ -54,7 +54,7 @@ You can also browse the svn tree online via:
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2004-2006 by Tassilo von Parseval
+Copyright (C) 2004-2007 by Tassilo von Parseval
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.4 or,

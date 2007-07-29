@@ -17,8 +17,8 @@ sub have_libevent {
       $INC  = "$INC -I/usr/local/include";
     }
     elsif ($^O eq "darwin") {
-      $LIBS = "$LIBS -L/sw/lib";
-      $INC  = "$INC -I/sw/include";
+      $LIBS = "$LIBS -L/sw/lib -L/opt/local/lib";
+      $INC  = "$INC -I/sw/include -I/opt/local/include";
     }
 
     print "Checking existance of libevent...";
@@ -59,8 +59,8 @@ sub get_defines {
       $INC  = "-I/usr/local/include $INC";
     }
     elsif ($^O eq "darwin") {
-      $LIBS = "-L/sw/lib $LIBS";
-      $INC  = "-I/sw/include $INC";
+      $LIBS = "-L/sw/lib -L/opt/local/lib $LIBS";
+      $INC  = "-I/sw/include -I/opt/local/include $INC";
     }
   
     my $DEFINE;

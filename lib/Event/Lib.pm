@@ -8,7 +8,7 @@ require Exporter;
 require XSLoader;
 
 our @ISA = qw(Exporter);
-our $VERSION = '1.02';
+our $VERSION = '1.03';
 
 XSLoader::load('Event::Lib', $VERSION);
 
@@ -1139,7 +1139,7 @@ Also the manpage of event(3).
 
 =head1 VERSION
 
-This is version 1.02.
+This is version 1.03.
 
 =head1 AUTHOR
 
