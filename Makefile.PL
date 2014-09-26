@@ -89,7 +89,7 @@ Couldn't find libevent which is required
 for this module.
 
 To obtain it, go to
-    http://www.monkey.org/~provos/libevent/
+    http://libevent.org/
 *******************************************
 EOD
 }
@@ -111,6 +111,9 @@ WriteMakefile(
     NAME            => 'Event::Lib',
     VERSION_FROM    => 'lib/Event/Lib.pm', 
     PREREQ_PM       => {}, 
+    BUILD_REQUIRES  => {
+        'Test::SharedFork' => 0,
+    },
     ABSTRACT_FROM   => 'lib/Event/Lib.pm', 
     AUTHOR	    => 'Tassilo von Parseval <tassilo.von.parseval@rwth-aachen.de>',
     LIBS            => [ $args{LIBS} ], 

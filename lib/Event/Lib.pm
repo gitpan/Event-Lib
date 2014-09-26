@@ -8,7 +8,7 @@ require Exporter;
 require XSLoader;
 
 our @ISA = qw(Exporter);
-our $VERSION = '1.03';
+our $VERSION = '1.04';
 
 XSLoader::load('Event::Lib', $VERSION);
 
@@ -151,7 +151,7 @@ Event::Lib - Perl extentions for event-based programming
 =head1 DESCRIPTION
 
 This module is a Perl wrapper around libevent(3) as available from
-L<http://www.monkey.org/~provos/libevent/>.  It allows to execute a function
+L<http://libevent.org>.  It allows to execute a function
 whenever a given event on a filehandle happens, a timeout occurs or a signal is
 received.
 
@@ -1132,14 +1132,14 @@ all these issues.
 
 =head1 SEE ALSO
 
-libevent's home can be found at L<http://www.monkey.org/~provos/libevent/>. It
+libevent's home can be found at L<http://libevent.org>. It
 contains further references to event-based techniques.
 
 Also the manpage of event(3). 
 
 =head1 VERSION
 
-This is version 1.03.
+This is version 1.04.
 
 =head1 AUTHOR
 

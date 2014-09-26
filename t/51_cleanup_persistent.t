@@ -19,7 +19,8 @@ $^W = 0;
 
 use Event::Lib;
 use POSIX qw/SIGHUP/;
-use Test;
+use Test::More;
+use Test::SharedFork;
 BEGIN { plan tests => 6; }
 
 my $pid = fork;
@@ -37,9 +38,9 @@ if ($pid) {
 } else {
     event_init;
     MyEvent->new(SIGHUP, sub {})->add;
-    ok($_DESTROY, "not called");
+    is($_DESTROY, "not called");
     event_one_loop;
-    ok($_DESTROY, "not called", "Event::Lib::signal::DESTROY erroneously called");
+    is($_DESTROY, "not called", "Event::Lib::signal::DESTROY erroneously called");
     exit;
 }
 
@@ -57,8 +58,8 @@ if ($pid) {
 } else {
     event_init;
     MyEvent->new(SIGHUP, sub {shift->remove})->add;
-    ok($_DESTROY, "not called");
+    is($_DESTROY, "not called");
     event_one_loop;
-    ok($_DESTROY, "called", "Event::Lib::signal::DESTROY called too late");
+    is($_DESTROY, "called", "Event::Lib::signal::DESTROY called too late");
     exit;
 }

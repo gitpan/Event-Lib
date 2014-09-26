@@ -42,6 +42,7 @@ t/62_events_readded.t
 t/63_events_readded.t
 t/64_pending_events_destroyed.t
 t/65_stress_no_clone.t
+t/66_event_pending.t
 t/70_misc.t
 t/71_misc.t
 t/72_misc.t
@@ -52,3 +53,4 @@ t/91_leak.t
 t/92_leak.t
 t/93_leak.t
 typemap
+META.json                                Module JSON meta-data (added by MakeMaker)

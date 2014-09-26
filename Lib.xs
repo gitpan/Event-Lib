@@ -255,7 +255,7 @@ int  EVENT_INIT_DONE = -1;  /* we use the pid here */
 
 #define event_do_init()	    \
 {\
-    int _pid_ = SvIV(get_sv("$", FALSE)); \
+    int _pid_ = getpid(); \
     if (!EVENT_INIT_DONE  || EVENT_INIT_DONE != _pid_) {\
 	event_init();	\
 	DEBUG_init_pending(aTHX);   \
@@ -939,7 +939,7 @@ CODE:
 
     gettimeofday(&now, NULL);
     
-    if (!evtimer_pending(&args->ev, &tv))
+    if (!evtimer_initialized(&args->ev) || !evtimer_pending(&args->ev, &tv))
 	XSRETURN_NO;
     
     if (tv.tv_sec == 0 && tv.tv_usec == 0)

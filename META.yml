@@ -1,10 +1,21 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         Event-Lib
-version:      1.03
-version_from: lib/Event/Lib.pm
-installdirs:  site
-requires:
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.30
+---
+abstract: 'Perl extentions for event-based programming'
+author:
+  - 'Tassilo von Parseval <tassilo.von.parseval@rwth-aachen.de>'
+build_requires:
+  Test::SharedFork: 0
+configure_requires:
+  ExtUtils::MakeMaker: 0
+dynamic_config: 1
+generated_by: 'ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921'
+license: unknown
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Event-Lib
+no_index:
+  directory:
+    - t
+    - inc
+requires: {}
+version: 1.04

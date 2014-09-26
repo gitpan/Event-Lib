@@ -1,6 +1,6 @@
-use Test;
+use Test::More;
 BEGIN { plan tests => 3 }
-
+use Test::SharedFork;
 use Event::Lib;
 use Devel::Peek;
 
